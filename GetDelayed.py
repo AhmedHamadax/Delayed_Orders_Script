@@ -1,5 +1,4 @@
 import pandas as pd
-import datetime
 import streamlit as st
 
 # Streamlit App Title
@@ -21,28 +20,36 @@ if uploaded_file:
     filter2 = data['Phase Name'].isin(Phase_Name_Fil)
 
     filter3 = data['Number of Attempts'] == 0
+    filter4 = data['Number of Attempts'] == 1
 
-    # Filter Delayed Orders
-    delayed_orders = data[~filter1][~filter2][filter3].copy()
-    delayed_orders['Number Of Days'] = pd.Timestamp.today() - pd.to_datetime(delayed_orders['Created Date'])
-    delayed_orders['Number Of Days'] = delayed_orders['Number Of Days'].dt.days
+    def process_data(df, filter_attempts):
+        filtered_df = df[~filter1][~filter2][filter_attempts].copy()
+        filtered_df['Number Of Days'] = pd.Timestamp.today() - pd.to_datetime(filtered_df['Created Date'])
+        filtered_df['Number Of Days'] = filtered_df['Number Of Days'].dt.days
+        filtered_df = filtered_df[['BareCode', 'Customer Name', 'Contact Telephone',
+                                   'City', 'Address', ' Description', 'Number Of Days']]
+        return filtered_df[filtered_df['Number Of Days'] > 3]
 
-    # Selecting Required Columns
-    delayed_orders = delayed_orders[['BareCode', 'Customer Name', 'Contact Telephone',
-                                     'City', 'Address', ' Description', 'Number Of Days']]
-
-    # Apply Days Filter
-    delayed_orders = delayed_orders[delayed_orders['Number Of Days'] > 3]
+    # Process data for both filters
+    delayed_orders_0 = process_data(data, filter3)
+    delayed_orders_1 = process_data(data, filter4)
 
     # Display Data
-    st.write(f"Total Delayed Orders: {len(delayed_orders)}")
-    st.dataframe(delayed_orders)
+    st.subheader("Delayed Orders (Attempts = 0)")
+    st.write(f"Total Delayed Orders: {len(delayed_orders_0)}")
+    st.dataframe(delayed_orders_0)
+
+    st.subheader("Delayed Orders (Attempts = 1)")
+    st.write(f"Total Delayed Orders: {len(delayed_orders_1)}")
+    st.dataframe(delayed_orders_1)
 
     # Download Button
     @st.cache_data
     def convert_df(df):
         return df.to_csv(index=False).encode('utf-8')
 
-    csv = convert_df(delayed_orders)
-    st.download_button("Download Delayed Orders", csv, "delayed_orders.csv", "text/csv")
+    csv_0 = convert_df(delayed_orders_0)
+    csv_1 = convert_df(delayed_orders_1)
 
+    st.download_button("Download Delayed Orders (Attempts = 0)", csv_0, "delayed_orders_0.csv", "text/csv")
+    st.download_button("Download Delayed Orders (Attempts = 1)", csv_1, "delayed_orders_1.csv", "text/csv")

@@ -24,10 +24,19 @@ if uploaded_file:
 
     def process_data(df, filter_attempts):
         filtered_df = df[~filter1][~filter2][filter_attempts].copy()
-        filtered_df['Number Of Days'] = pd.Timestamp.today() - pd.to_datetime(filtered_df['Created Date'])
-        filtered_df['Number Of Days'] = filtered_df['Number Of Days'].dt.days
+
+        # Correct datetime parsing
+        filtered_df['Created Date'] = pd.to_datetime(
+            filtered_df['Created Date'], format="%d/%m/%Y %H:%M:%S", errors='coerce'
+        )
+
+        # Calculate Number Of Days
+        filtered_df['Number Of Days'] = (pd.Timestamp.today() - filtered_df['Created Date']).dt.days
+
+        # Select relevant columns
         filtered_df = filtered_df[['BareCode', 'Customer Name', 'Contact Telephone',
                                    'City', 'Address', ' Description', 'Number Of Days']]
+
         return filtered_df[filtered_df['Number Of Days'] > 3]
 
     # Process data for both filters

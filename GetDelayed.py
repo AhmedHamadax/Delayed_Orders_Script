@@ -35,7 +35,7 @@ if uploaded_file:
 
         # Select relevant columns
         filtered_df = filtered_df[['BareCode', 'Customer Name', 'Contact Telephone',
-                                   'City', 'Address', ' Description', 'Number Of Days']]
+                                   'City', ' Description', 'Number Of Days']]
 
         return filtered_df[filtered_df['Number Of Days'] > 3]
 
